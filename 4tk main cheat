@@ -1,0 +1,393 @@
+local player = game.Players.LocalPlayer
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- // Parent audio to TestService to avoid anti-cheat deletion
+local InjectTo = game:GetService("TestService")
+
+local specialChars = "1234567890QWRYUIOPASDFGHJKLZXVBMN+Ã—Ã·=/_<>,!@#$%^&*?`~\\|{}â‚¬Â£Â¥â‚©qwertyuiopasdfghjklzxcvbnm"
+local randomName = nil
+local currentSoundId = nil
+local isPlaying = false
+
+local function generateRandomName()
+    local length = math.random(8, 12)
+    local name = ""
+    for i = 1, length do
+        local index = math.random(1, #specialChars)
+        name = name .. specialChars:sub(index, index)
+    end
+    return name
+end
+
+local function findRemoteEvent(name, parent)
+    for _, child in ipairs(parent:GetDescendants()) do
+        if child:IsA("RemoteEvent") and child.Name == name then
+            return child
+        end
+    end
+    return nil
+end
+
+local function getRemoteEvent()
+    return findRemoteEvent("AC6_FE_Sounds", replicatedStorage) or findRemoteEvent("AC6_FE_Sounds", workspace)
+end
+
+local function playSound(soundId)
+    local sound = Instance.new("Sound")
+    sound.SoundId = soundId
+    sound.Volume = 1
+    sound.PlayOnRemove = true
+    sound.Parent = workspace
+    sound:Destroy()
+end
+
+-- // Advanced Notification library by IceMinister#9889
+local NotificationLibrary = {}
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local library
+local templateFolder
+local canvas
+
+function NotificationLibrary:Load()
+    library = game:GetObjects("rbxassetid://15133757123")[1]
+    templateFolder = library.Templates
+    canvas = library.list
+    library.Name = "Notification Library"
+    library.Parent = CoreGui
+end
+
+function NotificationLibrary:SendNotification(Mode, Text, Duration, IconId)
+    local libaryCore = CoreGui:FindFirstChild("Notification Library")
+    if not libaryCore then
+        NotificationLibrary:Load()
+    else
+        library = libaryCore
+        templateFolder = library.Templates
+        canvas = library.list
+    end
+    if templateFolder:FindFirstChild(Mode) then
+        task.spawn(function()
+            local success, err = pcall(function()
+                local Notification = templateFolder:WaitForChild(Mode):Clone()
+                local filler = Notification.Filler
+                local bar = Notification.bar
+                local icon = Notification.Icon
+                Notification.Header.Text = Text
+                if IconId then
+                    icon.Image = "rbxassetid://" .. IconId
+                end
+                
+                Notification.Visible = true
+                Notification.Parent = canvas
+    
+                Notification.Size = UDim2.new(0, 0, 0.1, 0)
+                filler.Size = UDim2.new(1, 0, 1, 0)
+        
+                local T1 = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                local T2 = TweenInfo.new(Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                local T3 = TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+            
+                TweenService:Create(Notification, T1, {Size = UDim2.new(1, 0, 0.1, 0)}):Play()
+                task.wait(0.3)
+                TweenService:Create(filler, T3, {Size = UDim2.new(0.01, 0, 1, 0)}):Play()
+            
+                TweenService:Create(bar, T2, {Size = UDim2.new(1, 0, 0.06, 0)}):Play()
+            
+                task.wait(Duration)
+            
+                TweenService:Create(filler, T1, {Size = UDim2.new(1, 0, 1, 0)}):Play()
+                task.wait(0.3)
+                TweenService:Create(Notification, T3, {Size = UDim2.new(0, 0, 0.1, 0)}):Play()
+                task.wait(0.4)
+                Notification:Destroy()
+            end)
+            if not success then
+                warn("Error creating notification: ", err)
+            end
+        end)
+    else
+        warn("Invalid notification theme")
+    end
+end
+
+local remote = getRemoteEvent()
+
+if remote then
+    playSound("rbxassetid://2084290015")
+    NotificationLibrary:SendNotification("Success", "AC6 Connection Established - Ready for Server-Side Audio!", 4, "2084290015")
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "AC6_EXPLOIT_CONTROL_PANEL"
+    gui.Parent = game:GetService("CoreGui")
+    gui.ResetOnSpawn = false
+
+    local mainFrame = Instance.new("Frame", gui)
+    mainFrame.Size = UDim2.new(0, 350, 0, 250)
+    mainFrame.Position = UDim2.new(0.5, -175, 0.5, -125)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+    mainFrame.BorderSizePixel = 2
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.BackgroundTransparency = 0.1
+
+    local corner = Instance.new("UICorner", mainFrame)
+    corner.CornerRadius = UDim.new(0, 10)
+
+    local titleBar = Instance.new("Frame", mainFrame)
+    titleBar.Size = UDim2.new(1, 0, 0, 35)
+    titleBar.BackgroundColor3 = Color3.fromRGB(170, 170, 170)
+    titleBar.BorderSizePixel = 0
+
+    local titleCorner = Instance.new("UICorner", titleBar)
+    titleCorner.CornerRadius = UDim.new(0, 10)
+
+    local titleLabel = Instance.new("TextLabel", titleBar)
+    titleLabel.Size = UDim2.new(1, -70, 1, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.Text = "SOUNDBOARD BUTCHX [BY 4TK]"
+    titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+    titleLabel.TextSize = 22
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local closeButton = Instance.new("TextButton", titleBar)
+    closeButton.Size = UDim2.new(0, 35, 1, 0)
+    closeButton.Position = UDim2.new(1, -40, 0, 0)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
+    closeButton.Font = Enum.Font.SourceSansBold
+    closeButton.TextSize = 22
+    closeButton.MouseButton1Click:Connect(function()
+        gui:Destroy()
+        playSound("rbxassetid://9066167010")
+    end)
+
+    local minimizeButton = Instance.new("TextButton", titleBar)
+    minimizeButton.Size = UDim2.new(0, 35, 1, 0)
+    minimizeButton.Position = UDim2.new(1, -80, 0, 0)
+    minimizeButton.Text = "-"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(170, 170, 170)
+    minimizeButton.Font = Enum.Font.SourceSansBold
+    minimizeButton.TextSize = 22
+
+    local textBox = Instance.new("TextBox", mainFrame)
+    textBox.Size = UDim2.new(0.9, 0, 0.15, 0)
+    textBox.Position = UDim2.new(0.05, 0, 0.2, 0)
+    textBox.PlaceholderText = "[Enter Music ID]"
+    textBox.Text = ""
+    textBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+    textBox.TextSize = 16
+    textBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.BorderSizePixel = 1
+    textBox.Font = Enum.Font.SourceSans
+    textBox.ClearTextOnFocus = false
+
+    local playButton = Instance.new("TextButton", mainFrame)
+    playButton.Size = UDim2.new(0.3, 0, 0.15, 0)
+    playButton.Position = UDim2.new(0.05, 0, 0.4, 0)
+    playButton.Text = "Play"
+    playButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+    playButton.Font = Enum.Font.SourceSansBold
+    playButton.TextSize = 18
+
+    local stopButton = Instance.new("TextButton", mainFrame)
+    stopButton.Size = UDim2.new(0.3, 0, 0.15, 0)
+    stopButton.Position = UDim2.new(0.35, 0, 0.4, 0)
+    stopButton.Text = "Stop"
+    stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    stopButton.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
+    stopButton.Font = Enum.Font.SourceSansBold
+    stopButton.TextSize = 18
+
+    local loopLabel = Instance.new("TextLabel", mainFrame)
+    loopLabel.Size = UDim2.new(0.3, 0, 0.05, 0)
+    loopLabel.Position = UDim2.new(0.05, 0, 0.9, 0)
+    loopLabel.Text = "Loop: "
+    loopLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+    loopLabel.TextSize = 14
+    loopLabel.BackgroundTransparency = 1
+    loopLabel.Font = Enum.Font.SourceSans
+    loopLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local loopButton = Instance.new("TextButton", mainFrame)
+    loopButton.Size = UDim2.new(0.15, 0, 0.05, 0)
+    loopButton.Position = UDim2.new(0.25, 0, 0.9, 0)
+    loopButton.Text = "ON"
+    loopButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+    loopButton.BackgroundTransparency = 1
+    loopButton.Font = Enum.Font.SourceSansBold
+    loopButton.TextSize = 14
+
+    local loopEnabled = true
+
+    loopButton.MouseButton1Click:Connect(function()
+        loopEnabled = not loopEnabled
+        loopButton.Text = loopEnabled and "ON" or "OFF"
+        loopButton.TextColor3 = loopEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    end)
+
+    local volumeBox = Instance.new("TextBox", mainFrame)
+    volumeBox.Size = UDim2.new(0.35, 0, 0.15, 0)
+    volumeBox.Position = UDim2.new(0.05, 0, 0.6, 0)
+    volumeBox.PlaceholderText = "[Volume 0-10]"
+    volumeBox.Text = "1"
+    volumeBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+    volumeBox.TextSize = 16
+    volumeBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    volumeBox.BorderSizePixel = 1
+    volumeBox.Font = Enum.Font.SourceSans
+
+    local pitchBox = Instance.new("TextBox", mainFrame)
+    pitchBox.Size = UDim2.new(0.35, 0, 0.15, 0)
+    pitchBox.Position = UDim2.new(0.45, 0, 0.6, 0)
+    pitchBox.PlaceholderText = "[Pitch 0.5-2]"
+    pitchBox.Text = "1"
+    pitchBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+    pitchBox.TextSize = 16
+    pitchBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    pitchBox.BorderSizePixel = 1
+    pitchBox.Font = Enum.Font.SourceSans
+
+    local timeBox = Instance.new("TextBox", mainFrame)
+    timeBox.Size = UDim2.new(0.35, 0, 0.15, 0)
+    timeBox.Position = UDim2.new(0.65, 0, 0.4, 0)
+    timeBox.PlaceholderText = "[Start Time]"
+    timeBox.Text = "0"
+    timeBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+    timeBox.TextSize = 16
+    timeBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    timeBox.BorderSizePixel = 1
+    timeBox.Font = Enum.Font.SourceSans
+
+    local isMinimized = false
+    local lastPosition = UDim2.new(0.5, -175, 0.5, -125)
+
+    local function toggleVisibility(visible)
+        textBox.Visible = visible
+        playButton.Visible = visible
+        stopButton.Visible = visible
+        volumeBox.Visible = visible
+        pitchBox.Visible = visible
+        timeBox.Visible = visible
+        loopLabel.Visible = visible
+        loopButton.Visible = visible
+    end
+
+    minimizeButton.MouseButton1Click:Connect(function()
+        if isMinimized then
+            toggleVisibility(true)
+            local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 350, 0, 250),
+                Position = lastPosition
+            })
+            expandTween:Play()
+        else
+            lastPosition = mainFrame.Position
+            toggleVisibility(false)
+            local minimizeTween = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 350, 0, 35),
+                Position = UDim2.new(lastPosition.X.Scale, lastPosition.X.Offset, lastPosition.Y.Scale, lastPosition.Y.Offset)
+            })
+            minimizeTween:Play()
+        end
+        isMinimized = not isMinimized
+        playSound("rbxassetid://243152215")
+    end)
+
+    local function playAudio(musicId, volume, pitch, timePosition)
+        if not randomName then
+            randomName = generateRandomName()
+        end
+
+        local assetId = "rbxassetid://" .. musicId
+        local success, err = pcall(function()
+            local currentRemote = getRemoteEvent()
+            if currentRemote then
+                local args = {
+                    [1] = "newSound",
+                    [2] = randomName,
+                    [3] = InjectTo,
+                    [4] = assetId,
+                    [5] = pitch,
+                    [6] = volume,
+                    [7] = loopEnabled,
+                    [8] = timePosition
+                }
+                currentRemote:FireServer(unpack(args))
+                currentRemote:FireServer("playSound", randomName)
+                isPlaying = true
+                currentSoundId = musicId
+            else
+                error("RemoteEvent not found!")
+            end
+        end)
+
+        if not success then
+            playSound("rbxassetid://9066167010")
+            NotificationLibrary:SendNotification("Error", "ðŸ˜¢ Failed to connect to AC6 (Vehicle despawn?)", 5, "9066167010")
+        else
+            playSound("rbxassetid://156785206")
+            NotificationLibrary:SendNotification("Success", "Playing audio ID: " .. musicId, 3, "156785206")
+        end
+    end
+
+    local function stopAudio()
+        if isPlaying and randomName then
+            local success, err = pcall(function()
+                local currentRemote = getRemoteEvent()
+                if currentRemote then
+                    currentRemote:FireServer("stopSound", randomName)
+                    isPlaying = false
+                    currentSoundId = nil
+                else
+                    error("RemoteEvent not found!")
+                end
+            end)
+            if not success then
+                playSound("rbxassetid://9066167010")
+                NotificationLibrary:SendNotification("Error", "ðŸ˜¢ Failed to stop audio", 5, "9066167010")
+            else
+                playSound("rbxassetid://156785206")
+                NotificationLibrary:SendNotification("Success", "Audio stopped", 3, "156785206")
+            end
+        end
+    end
+
+    playButton.MouseButton1Click:Connect(function()
+        local musicId = textBox.Text
+        local volume = math.clamp(tonumber(volumeBox.Text) or 1, 0, 10)
+        local pitch = math.clamp(tonumber(pitchBox.Text) or 1, 0.5, 2)
+        local timePosition = tonumber(timeBox.Text) or 0
+        if musicId and musicId ~= "" then
+            playAudio(musicId, volume, pitch, timePosition)
+        else
+            NotificationLibrary:SendNotification("Error", "Please enter a valid Music ID", 3, "9066167010")
+        end
+    end)
+
+    stopButton.MouseButton1Click:Connect(stopAudio)
+
+    -- // Keyboard shortcuts
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed then
+            if input.KeyCode == Enum.KeyCode.P then
+                playButton:Activate()
+            elseif input.KeyCode == Enum.KeyCode.S then
+                stopButton:Activate()
+            elseif input.KeyCode == Enum.KeyCode.M then
+                minimizeButton:Activate()
+            end
+        end
+    end)
+
+else
+    playSound("rbxassetid://9066167010")
+    NotificationLibrary:SendNotification("Error", "ðŸ’” AC6 not found in this game!", 5, "9066167010")
+end
